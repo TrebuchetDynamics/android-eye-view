@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="false"
+        android:label="Android Eye View"
+        android:supportsRtl="true">
+        <meta-data
+            android:name="com.google.android.geo.maps3d.API_KEY"
+            android:value="${MAPS3D_API_KEY}" />
+    </application>
+</manifest>
