@@ -20,7 +20,8 @@ The roadmap is ordered by technical risk and dependency, not by calendar date. N
 - ✅ Native Kotlin direction selected.
 - ✅ Direct-first BYOK and optional-gateway boundaries selected.
 - ✅ Initial [README.md](README.md) and roadmap documented.
-- 🚧 M0 feasibility evidence and Android project foundation.
+- ✅ M0 Android scaffold, map adapter, synthetic harness, UI tests, and keyless-device safety checks.
+- 🚧 Key-backed native rendering, attribution, lifecycle, density, model, trail, follow, and thermal evidence.
 
 ## Release strategy
 
@@ -40,45 +41,46 @@ Development is divided into five milestones:
 
 ### Repository foundation
 
-- ⬜ Create the Gradle version catalog and multi-module Android project.
-- ⬜ Set Android 12 / API 31 as the minimum supported version.
-- ⬜ Add Kotlin, Jetpack Compose, coroutines, and the selected test stack.
-- ⬜ Add debug-only local configuration for a developer-provided Maps 3D key.
-- ⬜ Ensure no credential is packaged into version control or release artifacts.
-- ⬜ Add CI for formatting, static analysis, unit tests, and debug assembly.
-- ⬜ Add dependency update and secret-scanning automation.
-- ⬜ Document reproducible setup and key restriction steps.
+- ✅ Create the Gradle version catalog and multi-module Android project.
+- ✅ Set Android 12 / API 31 as the minimum supported version.
+- ✅ Add Kotlin, Jetpack Compose, coroutines, and the selected test stack.
+- ✅ Add debug-only local configuration for a developer-provided Maps 3D key.
+- ✅ Ensure no credential is packaged into version control or release artifacts.
+- ✅ Add CI for static analysis, unit tests, and debug assembly.
+- ✅ Add dependency update and secret-scanning automation.
+- ✅ Document reproducible setup and key restriction steps.
 
 ### Map adapter spike
 
-- ⬜ Host the lifecycle-managed Maps 3D view inside Compose.
-- ⬜ Isolate all Google SDK types in a `maps3d-adapter` module.
-- ⬜ Define provider-neutral camera, marker, polyline, polygon, popover, and model interfaces.
-- ⬜ Prove process recreation, background/foreground transitions, and configuration changes.
+- ✅ Host the lifecycle-managed Maps 3D view inside Compose.
+- ✅ Isolate all Google SDK types in a `maps3d-adapter` module.
+- ✅ Define provider-neutral camera, entity, polyline, and model-facing interfaces required by the M0 harness.
+- ⬜ Prove process recreation, background/foreground transitions, and configuration changes on a key-backed map.
 - ⬜ Verify required Google attribution remains visible in every prototype mode.
 
 ### Live-entity rendering spike
 
-- ⬜ Generate at least 5,000 synthetic moving contacts.
-- ⬜ Measure marker creation, updates, removal, selection, and label density.
-- ⬜ Demonstrate one moving glTF aircraft with heading and scale.
-- ⬜ Draw and update a bounded trail.
-- ⬜ Follow the aircraft with a cancellable programmatic camera owner.
-- ⬜ Confirm a user gesture immediately releases programmatic camera ownership.
+- ✅ Generate exactly 5,000 deterministic synthetic moving contacts.
+- ⬜ Measure native marker creation, updates, removal, selection, and label density.
+- ⬜ Demonstrate one moving glTF aircraft with heading and scale on a key-backed map.
+- ✅ Implement a bounded 120-point trail and native polyline adapter.
+- ✅ Implement a cancellable, user-first programmatic camera owner.
+- ⬜ Confirm touch cancellation against a key-backed native map.
 
 ### Presentation spike
 
-- ⬜ Prototype CRT, NVG, monochrome, snow/noise, and thermal-inspired native treatments.
+- ✅ Implement CRT, NVG, monochrome, snow/noise, and thermal-inspired native treatments.
 - ⬜ Prototype a native entity-highlight treatment when screen-space detection boxes are unavailable.
-- ⬜ Record visual differences from the CesiumJS reference instead of hiding them.
-- ⬜ Confirm every presentation mode remains readable with required attribution.
+- ✅ Label all presentation treatments as visual simulations rather than sensor imagery.
+- ⬜ Confirm every presentation mode remains readable with required attribution on a live map.
 
 ### Performance and policy gates
 
-- ⬜ Select and document the initial reference-device set.
-- ⬜ Establish repeatable frame-time, memory, battery, and thermal measurements.
-- ⬜ Confirm Google Maps Platform terms and Android key restrictions support the planned sideload model.
-- ⬜ Confirm the experimental SDK’s camera, model, geometry, and lifecycle APIs cover M1.
+- ✅ Select and document the initial SM-S928B / Android 16 reference device.
+- ✅ Document repeatable frame-time, memory, battery, and thermal measurements.
+- ✅ Document Google Maps Platform setup and Android key restrictions for the sideload model.
+- ✅ Confirm the experimental SDK exposes the camera, marker, model, polyline, and lifecycle APIs needed by M1.
+- ⬜ Execute the measurements against an authenticated native map.
 
 ### M0 exit gate
 

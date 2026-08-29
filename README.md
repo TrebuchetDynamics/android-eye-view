@@ -11,12 +11,13 @@ The target experience combines a photorealistic 3D globe with live and recent ai
 ## Project status
 
 > [!IMPORTANT]
-> Android Eye View is currently in **planning and feasibility validation**. There is no installable app or supported APK yet.
+> Android Eye View is currently in **M0 native feasibility validation**. The buildable debug harness is not a supported APK release.
 
-The product requirements are defined, and implementation will proceed through native-rendering feasibility gates before the first application milestone.
+The Kotlin/Compose foundation, isolated Maps 3D adapter, deterministic 5,000-contact harness, aircraft model/trail/follow controls, and presentation approximations are implemented. Static and keyless-device checks pass; key-backed native rendering and performance gates remain before M0 can receive a GO decision.
 
 - Read the [product requirements](PRD.md).
 - Follow the [implementation roadmap](ROADMAP.md).
+- Review the current [M0 feasibility evidence](docs/m0/FEASIBILITY.md).
 - Track development in this repository’s [issues](https://github.com/TrebuchetDynamics/android-eye-view/issues).
 
 ## Mission
