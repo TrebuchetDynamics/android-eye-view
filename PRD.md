@@ -8,7 +8,7 @@
 
 ## 1. Product summary
 
-Android Eye View is a native Android spatial-intelligence explorer inspired by the mission of God’s Eye View: turn fragmented public signals into one understandable, interactive view of Earth.
+Android Eye View is the native Android port of God’s Eye View, adapting its spatial-intelligence mission and principal workflows to Android: turn fragmented public signals into one understandable, interactive view of Earth.
 
 The app combines a photorealistic 3D globe with live and recent public data about aircraft, vessels, satellites, earthquakes, fires, traffic, public cameras, radio, bikeshare, launches, and mapped infrastructure. Users can move from a global overview to a tracked contact or local event without switching among specialist websites.
 
