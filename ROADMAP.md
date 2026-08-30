@@ -20,8 +20,9 @@ The roadmap is ordered by technical risk and dependency, not by calendar date. N
 - ✅ Native Kotlin direction selected.
 - ✅ Direct-first BYOK and optional-gateway boundaries selected.
 - ✅ Initial [README.md](README.md) and roadmap documented.
-- ✅ M0 Android scaffold, map adapter, synthetic harness, UI tests, and keyless-device safety checks.
-- 🚧 Key-backed native rendering, attribution, lifecycle, density, model, trail, follow, and thermal evidence.
+- ✅ M0 Android scaffold, provider-neutral map core, locally bundled MapLibre globe adapter, synthetic harness, UI tests, and free/keyless runtime.
+- ✅ Reference-device globe, attribution, 5,000-contact load, 600-label candidate budget, and ten-tick rendering evidence.
+- 🚧 Complete selection/trail/follow gesture cancellation, lifecycle/recovery, and thermal-soak evidence before the final M0 decision.
 
 ## Release strategy
 
@@ -29,7 +30,7 @@ Development is divided into five milestones:
 
 | Milestone | Outcome | Release posture |
 |---|---|---|
-| M0 | Native feasibility proven | Internal prototypes |
+| M0 | Free/keyless globe feasibility proven | Internal prototypes |
 | M1 | Living globe foundation | Developer preview |
 | M2 | Broad signal fusion | Private/opt-in alpha |
 | M3 | Immersive non-voice parity | Public alpha candidate |
@@ -44,33 +45,34 @@ Development is divided into five milestones:
 - ✅ Create the Gradle version catalog and multi-module Android project.
 - ✅ Set Android 12 / API 31 as the minimum supported version.
 - ✅ Add Kotlin, Jetpack Compose, coroutines, and the selected test stack.
-- ✅ Add debug-only local configuration for a developer-provided Maps 3D key.
+- ✅ Require no map key, token, billing account, registration, or paid map service.
 - ✅ Ensure no credential is packaged into version control or release artifacts.
 - ✅ Add CI for static analysis, unit tests, and debug assembly.
 - ✅ Add dependency update and secret-scanning automation.
-- ✅ Document reproducible setup and key restriction steps.
+- ✅ Document reproducible keyless setup and physical-device validation.
 
 ### Map adapter spike
 
-- ✅ Host the lifecycle-managed Maps 3D view inside Compose.
-- ✅ Isolate all Google SDK types in a `maps3d-adapter` module.
+- ✅ Host one lifecycle-managed hardened WebView inside Compose.
+- ✅ Bundle MapLibre GL JS executable assets locally and isolate them in `web-map-adapter`.
+- ✅ Load the keyless OpenFreeMap Liberty style with a restrictive CSP and visible map attribution.
 - ✅ Define provider-neutral camera, entity, polyline, and model-facing interfaces required by the M0 harness.
-- ⬜ Prove process recreation, background/foreground transitions, and configuration changes on a key-backed map.
-- ⬜ Verify required Google attribution remains visible in every prototype mode.
+- ⬜ Complete process recreation, background/foreground, configuration-change, renderer-process, offline, and recovery tests.
+- ✅ Verify OpenFreeMap, OpenMapTiles, and OpenStreetMap attribution is visible on the reference-device run.
 
 ### Live-entity rendering spike
 
 - ✅ Generate exactly 5,000 deterministic synthetic moving contacts.
-- ⬜ Measure native marker creation, updates, removal, selection, and label density.
-- ⬜ Demonstrate one moving glTF aircraft with heading and scale on a key-backed map.
+- ✅ Measure one batched GeoJSON update for 5,000 contacts and 600 collision-managed label candidates.
+- ✅ Demonstrate an honestly labeled selected-aircraft marker fallback; glTF is deferred beyond M0.
 - ✅ Implement a bounded 120-point trail and native polyline adapter.
 - ✅ Implement a cancellable, user-first programmatic camera owner.
-- ⬜ Confirm touch cancellation against a key-backed native map.
+- ⬜ Confirm touch cancellation against the free globe on reference hardware.
 
 ### Presentation spike
 
 - ✅ Implement CRT, NVG, monochrome, snow/noise, and thermal-inspired native treatments.
-- ⬜ Prototype a native entity-highlight treatment when screen-space detection boxes are unavailable.
+- ⬜ Prototype an entity-highlight treatment when screen-space detection boxes are unavailable.
 - ✅ Label all presentation treatments as visual simulations rather than sensor imagery.
 - ⬜ Confirm every presentation mode remains readable with required attribution on a live map.
 
@@ -78,18 +80,18 @@ Development is divided into five milestones:
 
 - ✅ Select and document the initial SM-S928B / Android 16 reference device.
 - ✅ Document repeatable frame-time, memory, battery, and thermal measurements.
-- ✅ Document Google Maps Platform setup and Android key restrictions for the sideload model.
-- ✅ Confirm the experimental SDK exposes the camera, marker, model, polyline, and lifecycle APIs needed by M1.
-- ⬜ Execute the measurements against an authenticated native map.
+- ✅ Document the free/keyless renderer decision, OpenFreeMap no-SLA risk, attribution, and self-host escape hatch.
+- ✅ Confirm the MapLibre command bridge exposes the camera, batched contacts, marker fallback, polyline, selection, and lifecycle seams needed by M1.
+- 🚧 Complete the reference-device lifecycle, recovery, memory, and thermal measurements.
 
 ### M0 exit gate
 
 M0 is complete only when:
 
-- the native map survives lifecycle and process-recreation tests;
+- the free globe survives lifecycle, renderer-process, offline/recovery, and process-recreation tests;
 - 5,000 synthetic contacts remain usable under adaptive density rules;
-- selection, trail rendering, glTF movement, and camera follow are demonstrated;
-- no unresolved blocker remains for required attribution or Android key restriction;
+- selection, trail rendering, the aircraft marker fallback, and camera follow are demonstrated;
+- no unresolved blocker remains for required attribution, keyless operation, or upstream service terms;
 - unsupported upstream effects have documented functional alternatives;
 - results and known SDK risks are committed to the repository.
 
@@ -141,14 +143,13 @@ M0 is complete only when:
 
 M1 is complete only when a fresh installation can:
 
-1. configure an Android-restricted map key;
-2. open an interactive globe;
-3. launch a mission;
-4. select and track a live or propagated entity;
-5. inspect source, freshness, and coverage;
-6. recover cleanly from one provider failure;
-7. return to the full globe;
-8. restore valid state after ordinary process recreation.
+1. open the keyless interactive globe without an account or map credential;
+2. launch a mission;
+3. select and track a live or propagated entity;
+4. inspect source, freshness, and coverage;
+5. recover cleanly from one provider failure;
+6. return to the full globe;
+7. restore valid state after ordinary process recreation.
 
 The reference device must meet the PRD’s cold-start, selection, frame-rate, backgrounding, and memory requirements.
 
@@ -276,7 +277,7 @@ M4 is complete only when all [PRD release criteria](PRD.md#19-release-criteria) 
 
 Post-alpha work is evidence-driven and does not block the initial port:
 
-- close documented native parity gaps as the Maps 3D SDK evolves;
+- close documented Android parity gaps as MapLibre and Android System WebView evolve;
 - widen device support after performance measurements justify it;
 - evaluate Google Play distribution separately from sideloading;
 - add providers only when license, security, quota, and provenance requirements are complete;
@@ -299,14 +300,13 @@ Every implementation slice must include:
 
 ## Near-term implementation order
 
-The first engineering slices should be completed in this order:
+The remaining M0 slices should be completed in this order:
 
-1. Gradle multi-module scaffold and CI.
-2. Provider-neutral `core-map` interfaces.
-3. Lifecycle-safe `maps3d-adapter` proof.
-4. Synthetic moving-contact benchmark.
-5. Model, trail, selection, and camera-follow proof.
-6. Native presentation-filter experiments.
-7. M0 evidence report and go/no-go decision for M1.
+1. Physical selection, aircraft marker fallback, bounded trail, follow, and gesture-cancellation proof.
+2. City-level building-extrusion and presentation-mode attribution/readability checks.
+3. Background/resume, recreation, renderer-process loss, offline failure, and recovery matrix.
+4. Ten-minute dense-scene memory and thermal soak with summarized measurements.
+5. Final M0 GO, bounded CONDITIONAL GO, or NO-GO decision.
+6. M1–M4 implementation issues only if that decision allows them.
 
-No production data provider should be integrated before the native map, entity-density, camera, attribution, and lifecycle feasibility gates are understood.
+No production data provider should be integrated before the free globe, entity-density, camera, attribution, recovery, and lifecycle feasibility gates are understood.

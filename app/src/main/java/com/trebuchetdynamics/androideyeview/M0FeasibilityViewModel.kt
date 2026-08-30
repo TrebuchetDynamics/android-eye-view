@@ -35,6 +35,7 @@ class M0FeasibilityViewModel(
     private val trail = TrailBuffer(maxPoints = 120)
     private var controller: MapController? = null
     private var contacts = emptyList<MapEntity>()
+    private var renderedContacts = emptyList<MapEntity>()
     private var motionJob: Job? = null
     private var closed = false
 
@@ -46,7 +47,12 @@ class M0FeasibilityViewModel(
         if (controller === newController) return
         controller?.close()
         controller = newController
-        mutableState.value = mutableState.value.copy(mapStatus = "READY", mapError = null)
+        replayScene(newController)
+        mutableState.value = mutableState.value.copy(
+            mapStatus = "READY",
+            mapError = null,
+            message = "Free globe ready",
+        )
     }
 
     fun markMapLoading() {
@@ -69,11 +75,12 @@ class M0FeasibilityViewModel(
             val labeled = allocation.entities.map { entity ->
                 if (entity.id in allocation.labelEntityIds) entity else entity.copy(label = null)
             }
+            renderedContacts = labeled
             controller?.renderEntities(labeled)
             mutableState.value = mutableState.value.copy(
                 sourceContactCount = generated.size,
                 renderedContactCount = labeled.size,
-                labelCount = allocation.labelEntityIds.size,
+                labelCandidateCount = allocation.labelEntityIds.size,
                 loadDurationMillis = elapsedMillis(start),
                 message = "Synthetic contacts loaded",
             )
@@ -138,6 +145,15 @@ class M0FeasibilityViewModel(
         mutableState.value = mutableState.value.copy(sensorMode = mode)
     }
 
+    fun recordRendererMetric(name: String, value: Double) {
+        if (!value.isFinite() || value < 0.0) return
+        mutableState.value = when (name) {
+            "contacts-render-ms" -> mutableState.value.copy(rendererContactsMillis = value)
+            "raf-p95-ms" -> mutableState.value.copy(rendererRafP95Millis = value)
+            else -> mutableState.value
+        }
+    }
+
     private suspend fun tickAndRender() {
         val start = nanoTime()
         val updated = withContext(dispatcher) {
@@ -148,6 +164,7 @@ class M0FeasibilityViewModel(
         val labeled = allocation.entities.map { entity ->
             if (entity.id in allocation.labelEntityIds) entity else entity.copy(label = null)
         }
+        renderedContacts = labeled
         controller?.renderEntities(labeled)
 
         selectedEntity()?.let { selected ->
@@ -165,10 +182,23 @@ class M0FeasibilityViewModel(
 
         mutableState.value = mutableState.value.copy(
             renderedContactCount = labeled.size,
-            labelCount = allocation.labelEntityIds.size,
+            labelCandidateCount = allocation.labelEntityIds.size,
             tickCount = mutableState.value.tickCount + 1,
             lastTickDurationMillis = elapsedMillis(start),
         )
+    }
+
+    private fun replayScene(target: MapController) {
+        if (renderedContacts.isNotEmpty()) target.renderEntities(renderedContacts)
+        val selected = selectedEntity() ?: return
+        target.renderModel(selected, AIRCRAFT_MODEL_URI)
+        val trailPoints = trail.snapshot()
+        if (trailPoints.size >= 2) {
+            target.renderPolyline(MapPolyline(TRAIL_ID, trailPoints))
+        }
+        if (cameraOwnership.currentOwner == CameraOwner.FOLLOW) {
+            target.setCamera(FollowCamera.forEntity(selected, reducedMotion = false))
+        }
     }
 
     private fun selectedEntity(): MapEntity? {
@@ -193,8 +223,7 @@ class M0FeasibilityViewModel(
     }
 
     companion object {
-        const val AIRCRAFT_MODEL_URI =
-            "https://storage.googleapis.com/gmp-maps-demos/p3d-map/assets/Airplane.glb"
+        const val AIRCRAFT_MODEL_URI = "marker://aircraft-fallback"
         private const val TRAIL_ID = "selected-aircraft-trail"
         private const val MOTION_INTERVAL_MILLIS = 1_000L
     }
@@ -205,7 +234,7 @@ data class M0UiState(
     val mapError: String? = null,
     val sourceContactCount: Int = 0,
     val renderedContactCount: Int = 0,
-    val labelCount: Int = 0,
+    val labelCandidateCount: Int = 0,
     val selectedId: String? = null,
     val trailPointCount: Int = 0,
     val motionRunning: Boolean = false,
@@ -213,6 +242,8 @@ data class M0UiState(
     val sensorMode: SensorMode = SensorMode.NORMAL,
     val loadDurationMillis: Double? = null,
     val lastTickDurationMillis: Double? = null,
+    val rendererContactsMillis: Double? = null,
+    val rendererRafP95Millis: Double? = null,
     val tickCount: Int = 0,
-    val message: String = "Waiting for native map",
+    val message: String = "Waiting for free globe",
 )

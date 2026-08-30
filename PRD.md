@@ -2,7 +2,7 @@
 
 - **Status:** Approved design draft
 - **Platform:** Android 12+ (API 31+)
-- **Implementation:** Kotlin, Jetpack Compose, Maps 3D SDK for Android
+- **Implementation:** Kotlin, Jetpack Compose, locally bundled MapLibre GL JS in a hardened WebView
 - **Distribution:** Open-source source code and sideloadable APK
 - **Reference product:** [God’s Eye View](https://github.com/bilawalsidhu/gods-eye-view)
 
@@ -10,7 +10,7 @@
 
 Android Eye View is the native Android port of God’s Eye View, adapting its spatial-intelligence mission and principal workflows to Android: turn fragmented public signals into one understandable, interactive view of Earth.
 
-The app combines a photorealistic 3D globe with live and recent public data about aircraft, vessels, satellites, earthquakes, fires, traffic, public cameras, radio, bikeshare, launches, and mapped infrastructure. Users can move from a global overview to a tracked contact or local event without switching among specialist websites.
+The app combines a free, keyless 3D globe with live and recent public data about aircraft, vessels, satellites, earthquakes, fires, traffic, public cameras, radio, bikeshare, launches, and mapped infrastructure. Users can move from a global overview to a tracked contact or local event without switching among specialist websites.
 
 The experience should feel like a cinematic situational-awareness console while remaining honest about its sources and limitations. Live, delayed, stale, estimated, reconstructed, simulated, partial, and unavailable data must never be presented as equivalent states.
 
@@ -43,7 +43,7 @@ Deliver an Android-first application with native lifecycle handling, gestures, p
 
 Cover the primary workflows and data families of God’s Eye View, including global exploration, live layers, contact tracking, cockpit-style following, tactical context, missions, voice control, annotations, sensor-style presentation, and scene playback.
 
-Pixel-identical visual parity is not required where the native Maps 3D SDK lacks CesiumJS rendering hooks. In those cases, preserve the user outcome through clearly documented native approximations.
+Pixel-identical visual parity is not required where the Android renderer lacks CesiumJS capabilities. In those cases, preserve the user outcome through clearly documented Android approximations.
 
 ### G3. Direct-first, BYOK operation
 
@@ -69,7 +69,7 @@ Make each data source an independent module with a common contract so contributo
 - Flight, maritime, disaster, military, medical, or emergency operational use.
 - Guaranteed global completeness or real-time accuracy.
 - Historical world-state replay at arbitrary dates.
-- Offline photorealistic map downloads or caching prohibited third-party map content.
+- Offline map downloads or caching prohibited third-party map content.
 - Pixel-identical reproduction of CesiumJS post-processing effects.
 - Guaranteed support for low-end Android devices in the initial release.
 - A mandatory vendor-operated account, subscription, or hosted backend.
@@ -133,7 +133,7 @@ The open-source project does not require telemetry. When metrics are collected d
 
 ### 8.1 Core globe and navigation
 
-- Photorealistic 3D globe powered by Google Maps Platform’s Maps 3D SDK for Android.
+- Free, keyless 3D globe powered by locally bundled MapLibre GL JS and a compatible OpenFreeMap style endpoint.
 - Touch gestures for orbit, pan, tilt, rotate, and zoom.
 - Place and coordinate search.
 - Home/reset-globe action.
@@ -290,8 +290,9 @@ Provider adapters define freshness windows, but UI vocabulary and semantics are 
 
 - Kotlin.
 - Jetpack Compose for application UI.
-- A lifecycle-managed native `Map3DView` hosted within Compose.
-- Google Maps 3D SDK for Android for photorealistic terrain, camera movement, markers, polylines, polygons, popovers, and supported glTF models.
+- One lifecycle-managed, hardened Android WebView hosted within Compose.
+- Locally bundled MapLibre GL JS for true-globe rendering, camera movement, batched GeoJSON contacts, labels, selected markers, trails, and style-provided building extrusion.
+- A keyless OpenFreeMap Liberty style by default; no map key, token, billing account, registration, or paid service.
 - Kotlin coroutines and `Flow` for asynchronous state.
 - Room for app-owned metadata, bounded caches, and offline configuration—not prohibited map content.
 - DataStore for non-secret preferences.
@@ -300,7 +301,7 @@ Provider adapters define freshness windows, but UI vocabulary and semantics are 
 - WebRTC/native audio transport for optional realtime voice.
 - WorkManager only for user-enabled, policy-compliant low-frequency refresh jobs.
 
-The Maps 3D SDK and Compose integration must be isolated behind internal interfaces because the SDK and its Compose examples are experimental. No domain or data layer may depend directly on Google SDK classes.
+The WebView renderer and Compose integration must be isolated behind internal interfaces. No domain or data layer may depend on WebView, MapLibre, style, or tile-provider types. Executable renderer assets must be bundled in the APK; Kotlin-to-JavaScript commands must use serialized JSON rather than concatenated payload strings.
 
 ### 10.2 Module boundaries
 
@@ -308,7 +309,8 @@ The Maps 3D SDK and Compose integration must be isolated behind internal interfa
 app/                 Composition root, navigation, lifecycle, deep links
 core-model/          Provider-neutral entities, coordinates, freshness states
 core-map/            Internal map/camera/rendering interfaces
-maps3d-adapter/      Google Maps 3D SDK integration
+web-map-adapter/     Hardened WebView lifecycle, command bridge, callbacks
+web-map/             MapLibre renderer source, tests, and deterministic APK bundle
 layer-api/           Layer contracts, registry, lifecycle, query interfaces
 layers/               One independent module per live or bundled layer
 tracking/             Selection, interpolation, trails, nearby contacts
@@ -343,7 +345,7 @@ Enabling one layer must not initialize every layer. Disabled layers must release
 
 | Capability | Preferred path | Gateway expectation |
 |---|---|---|
-| Google Maps 3D | Native SDK with Android-restricted app key | Not used |
+| Default globe and basemap | Locally bundled MapLibre renderer plus keyless OpenFreeMap style/tiles | Optional compatible self-hosted endpoint |
 | Anonymous/public HTTPS feeds | Direct with bounded client caching | Optional |
 | User-keyed HTTPS feeds | Direct when provider permits; key encrypted locally | Optional/recommended for quota sharing |
 | AIS WebSocket | Direct BYOK when supported | Recommended for stable reconnect/cache behavior |
@@ -363,7 +365,7 @@ Gateway endpoints must be fixed-purpose. The gateway must not expose arbitrary U
 5. Repositories publish immutable layer snapshots and state.
 6. Tracking interpolates eligible movement between known fixes.
 7. The presentation coordinator applies level-of-detail, clustering, and device budgets.
-8. The map adapter applies a minimal diff to native map objects.
+8. The map adapter applies bounded serialized commands to batched renderer sources.
 9. UI surfaces consume the same snapshots used for rendered entities so counts and details cannot drift silently.
 
 ### 10.6 Camera ownership
@@ -383,11 +385,11 @@ A higher-priority action cancels the lower-priority owner and leaves the camera 
 
 | Reference capability | Android requirement |
 |---|---|
-| Photorealistic globe | Native Maps 3D SDK |
-| Entity billboards and labels | Native markers/popovers with density budgets |
-| Aircraft models | SDK-supported glTF models at close range |
-| Trails and orbits | Native polylines, simplified by zoom/distance |
-| Polygons and viewsheds | Native geometry where supported; clearly label estimated camera poses |
+| True 3D globe | MapLibre globe projection with a free/keyless style |
+| Entity billboards and labels | One batched GeoJSON source with circle and collision-managed symbol layers |
+| Aircraft representation | Heading-aware marker fallback in M0; evaluate optional model support after feasibility |
+| Trails and orbits | GeoJSON line layers, simplified by zoom/distance |
+| Polygons and viewsheds | Renderer geometry where supported; clearly label estimated camera poses |
 | CRT/NVG/Noir/Snow | Compose/native overlays and supported color treatment |
 | FLIR/thermal | Thermal-inspired presentation only; never claim measured heat |
 | Screen-space detection boxes | Native marker/highlight approximation if reliable projection is unavailable |
@@ -433,7 +435,7 @@ The app must not silently alter source records or label dropped rendering as mis
 ### Credentials
 
 - Never commit, bundle, or log real credentials.
-- Restrict the Google Maps key to the Android package name, signing certificate, and required API.
+- The default globe must not require or accept a mandatory map credential.
 - Store user-provided secrets using Keystore-backed encryption.
 - Exclude secrets from Android backup where appropriate.
 - Clear a credential and related cached authorization material when the user removes it.
@@ -442,6 +444,9 @@ The app must not silently alter source records or label dropped rendering as mis
 ### Networking
 
 - HTTPS only except explicitly documented local development endpoints.
+- Serve bundled renderer assets through `WebViewAssetLoader`; disable file/content access, mixed content, multiple windows, third-party cookies, and untrusted top-level navigation.
+- Enforce a restrictive content-security policy that permits local executable assets and only the selected map-resource origin.
+- Keep the JavaScript interface narrow, payload-bounded, main-thread-dispatched, and unavailable after renderer closure.
 - Validate schemas, content types, response sizes, redirects, and timeouts.
 - Adapter-owned host allowlists for any URL-bearing catalog such as CCTV or radio.
 - Do not provide arbitrary remote URL fetching.
@@ -464,7 +469,7 @@ The app must not silently alter source records or label dropped rendering as mis
 - Do not imply endorsement by or affiliation with God’s Eye View, Google, Cesium, data providers, governments, militaries, or emergency services.
 - Treat each dataset and model as independently licensed.
 - Keep required attribution visible in every map mode.
-- Do not cache, export, or redistribute Google Maps content contrary to Google Maps Platform terms.
+- Preserve OpenFreeMap, OpenMapTiles, OpenStreetMap, and any replacement style/tile attribution and licensing requirements.
 - Flag non-commercial data at build time and make it removable as one bounded module.
 - The TeleGeography submarine-cable dataset must not be included in a commercial build without an appropriate license.
 - OpenSky and news-source terms must be reviewed before any commercial or operational deployment.
@@ -490,7 +495,7 @@ The app must not silently alter source records or label dropped rendering as mis
 - Distinguish no records from no answer.
 - Retry automatically only within bounded policy; always offer a manual retry.
 - Surface gateway incompatibility with supported protocol version information.
-- If the Maps 3D SDK is unavailable, show a blocking globe error with diagnostics and setup guidance; do not represent a blank map as successful startup.
+- If local renderer startup, style loading, WebView rendering, or required map networking fails, show an honest globe error with diagnostics and retry guidance; do not represent a blank map as successful startup.
 - If a layer fails, retain the globe and all independent layers.
 
 ## 17. Testing strategy
@@ -550,12 +555,12 @@ Near-complete parity is the release target, but work is accepted through indepen
 
 ### M0 — Feasibility gates
 
-- Prove Maps 3D SDK rendering and lifecycle stability on reference devices.
-- Render and update at least 5,000 synthetic markers under adaptive density rules.
-- Demonstrate one moving glTF aircraft, a trail, selection, and camera follow.
-- Validate supported camera and annotation APIs.
-- Prototype native presentation-filter approximations.
-- Confirm Google Maps Platform terms and key restriction flow for sideloaded builds.
+- Prove free/keyless MapLibre globe rendering and lifecycle stability on reference devices.
+- Render and update exactly 5,000 synthetic contacts through a batched GeoJSON path under adaptive density rules.
+- Demonstrate one moving aircraft marker fallback, a bounded trail, selection, camera follow, and immediate gesture cancellation.
+- Validate the provider-neutral camera and geometry command bridge.
+- Prototype Android presentation-filter approximations.
+- Confirm OpenFreeMap/OpenMapTiles/OpenStreetMap attribution, terms, no-SLA risk, and a compatible self-host escape hatch.
 
 **Exit:** no unresolved blocker to the core globe, live entities, camera tracking, or required attribution.
 
@@ -567,7 +572,7 @@ Near-complete parity is the release target, but work is accepted through indepen
 - Selection, trails, contacts, tracking, HUD, and share links.
 - Live Contacts, Space Watch, and Environmental missions.
 
-**Exit:** a user can install, configure one map key, complete the core mission loop, and identify source/freshness for every visible record.
+**Exit:** a user can install, open the globe without a map credential or account, complete the core mission loop, and identify source/freshness for every visible record.
 
 ### M2 — Broad signal fusion
 
@@ -607,20 +612,20 @@ A public alpha may be published when:
 - Core use remains possible without voice or the optional gateway.
 - Every modeled, simulated, estimated, partial, stale, and reconstructed state is labeled.
 - Unsupported reference features and experimental SDK risks are listed in release notes.
-- Setup, key restriction, gateway, responsible-use, and data-source documentation are complete.
+- Keyless globe setup, optional gateway, responsible-use, and data-source documentation are complete.
 
 ## 20. Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Maps 3D SDK remains experimental or changes API | Rework or release instability | Isolate adapter; lock tested version; maintain M0 gates; avoid SDK types in domain modules |
-| Native SDK lacks CesiumJS post-processing/projection hooks | Reduced visual parity | Functional overlays, native highlights, honest differences, defer only nonessential effects |
+| Android WebView or MapLibre changes renderer behavior | Rework or release instability | Bundle and lock tested renderer assets; isolate the adapter; maintain M0 gates; keep renderer types out of domain modules |
+| OpenFreeMap has no service-level guarantee | Globe availability risk | Keep style endpoint replaceable, support a compatible self-hosted deployment, cache only where terms permit, and report outages honestly |
+| Renderer lacks CesiumJS post-processing/model hooks | Reduced visual parity | Functional overlays, marker fallbacks, honest differences, defer only nonessential effects |
 | Dense live layers overwhelm mobile GPU/CPU | Jank, heat, crashes | Adaptive LOD, clustering, caps, diff updates, reference-device stress gates |
 | Direct BYOK exposes recoverable user secrets on a compromised device | Credential abuse | Keystore encryption, restricted keys, provider budgets, gateway requirement for high-risk secrets, clear threat disclosure |
 | Provider terms prohibit a desired access or cache pattern | Feature removal | Per-adapter legal metadata, direct/gateway switches, replaceable providers, no prohibited caching |
 | Public feeds are incomplete or delayed | Misleading conclusions | Visible provenance, freshness, coverage, and non-operational-use warnings |
 | Optional gateway increases setup complexity | Voice and some feeds remain unavailable | Core app stays gateway-free; provide a versioned reference gateway and connection diagnostics |
-| Sideload signing changes break Google key restrictions | Map fails after install | Document signing fingerprints; provide build-specific key setup and actionable diagnostics |
 | Third-party radio/camera content creates privacy or content risk | Unexpected exposure or content | User-initiated playback only, source disclosure, allowlists, no recording by default |
 | Tactical visual language is mistaken for authority | Misuse or reputational harm | Persistent public-data framing, no classified claims, no named-person features, clear disclaimers |
 
@@ -643,14 +648,16 @@ A new layer is mergeable only when it includes:
 - [God’s Eye View repository](https://github.com/bilawalsidhu/gods-eye-view)
 - [God’s Eye View data sources](https://github.com/bilawalsidhu/gods-eye-view/blob/main/DATA_SOURCES.md)
 - [God’s Eye View security model](https://github.com/bilawalsidhu/gods-eye-view/blob/main/SECURITY.md)
-- [Google Maps 3D SDK for Android overview](https://developers.google.com/maps/documentation/maps-3d/android-sdk/overview)
-- [Google Maps 3D SDK Android samples](https://github.com/googlemaps-samples/android-maps3d-samples)
-- [Google Photorealistic 3D Tiles documentation](https://developers.google.com/maps/documentation/tile/3d-tiles)
+- [MapLibre GL JS documentation](https://maplibre.org/maplibre-gl-js/docs/)
+- [MapLibre GL JS repository](https://github.com/maplibre/maplibre-gl-js)
+- [OpenFreeMap](https://openfreemap.org/)
+- [OpenStreetMap copyright and attribution](https://www.openstreetmap.org/copyright)
 
 ## 23. Product decision record
 
-- **Native over wrapper:** Kotlin and native Android were selected over a CesiumJS WebView, Flutter, or React Native foundation.
-- **Functional over pixel parity:** Native approximations are accepted where the Maps 3D SDK lacks equivalent rendering hooks.
+- **Android-native shell, isolated hybrid renderer:** Kotlin and Jetpack Compose own the application while one hardened WebView hosts locally bundled MapLibre GL JS; Flutter and React Native are not used.
+- **Free/keyless default:** The mandatory globe requires no map key, token, billing account, registration, subscription, or paid map service.
+- **Functional over pixel parity:** Android approximations are accepted where the selected renderer lacks equivalent rendering hooks.
 - **Near-complete target:** The product targets the broad mission and principal workflows of God’s Eye View rather than a narrow three-layer demo.
 - **Direct-first networking:** The app connects directly where safe and allowed; a self-hosted gateway is optional for the core experience and required for protected server-side capabilities such as realtime voice tokens.
 - **Open-source sideloading:** Initial distribution prioritizes source availability, reproducible APK builds, and user-supplied credentials.

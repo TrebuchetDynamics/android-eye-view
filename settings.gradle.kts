@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 rootProject.name = "android-eye-view"
 include(":app")
 include(":core-map")
-include(":maps3d-adapter")
+include(":web-map-adapter")

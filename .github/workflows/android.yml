@@ -18,7 +18,20 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web-map/package-lock.json
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
+      - name: Validate and bundle free globe renderer
+        run: |
+          npm --prefix web-map ci
+          npm --prefix web-map test
+          npm --prefix web-map run typecheck
+          npm --prefix web-map run build
+          git diff --exit-code -- app/src/main/assets/map
+          test -z "$(git status --porcelain --untracked-files=all -- app/src/main/assets/map)"
       - name: Validate Android project
-        run: ./gradlew test lint assembleDebug
+        run: ./gradlew test lint assembleDebug assembleDebugAndroidTest

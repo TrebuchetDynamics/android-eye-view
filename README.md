@@ -1,19 +1,19 @@
 # Android Eye View
 
-**The native Android port of [God’s Eye View](https://github.com/bilawalsidhu/gods-eye-view).**
+**The free, open-source Android port of [God’s Eye View](https://github.com/bilawalsidhu/gods-eye-view).**
 
 > Public signals, spatially understood.
 
 Android Eye View is bringing the God’s Eye View mission to Android: one immersive, inspectable interface for exploring the public signals already broadcasting around the planet.
 
-The target experience combines a photorealistic 3D globe with live and recent aircraft, vessels, satellites, earthquakes, fires, traffic, public cameras, radio, bikeshare, launch activity, and mapped infrastructure. Every layer must make its source, freshness, coverage, and uncertainty visible.
+The target experience combines an immersive 3D globe with live and recent aircraft, vessels, satellites, earthquakes, fires, traffic, public cameras, radio, bikeshare, launch activity, and mapped infrastructure. Every layer must make its source, freshness, coverage, and uncertainty visible.
 
 ## Project status
 
 > [!IMPORTANT]
-> Android Eye View is currently in **M0 native feasibility validation**. The buildable debug harness is not a supported APK release.
+> Android Eye View is currently in **M0 free-globe feasibility validation**. The buildable debug harness is not a supported APK release.
 
-The Kotlin/Compose foundation, isolated Maps 3D adapter, deterministic 5,000-contact harness, aircraft model/trail/follow controls, and presentation approximations are implemented. Static and keyless-device checks pass; key-backed native rendering and performance gates remain before M0 can receive a GO decision.
+The app needs no map key, token, billing account, registration, or paid map service. A Kotlin/Compose shell hosts a locally bundled MapLibre GL JS globe in one hardened WebView, using the keyless OpenFreeMap Liberty style. The deterministic harness renders 5,000 moving synthetic contacts, a 600-label collision-managed budget, a selected-aircraft marker fallback, a bounded trail, and user-first camera follow. Static checks and an initial reference-device run pass; lifecycle, recovery, and soak gates remain before M0 can receive a final decision.
 
 - Read the [product requirements](PRD.md).
 - Follow the [implementation roadmap](ROADMAP.md).
@@ -37,7 +37,7 @@ Android Eye View will:
 
 ### Explore a living globe
 
-Navigate from a full-Earth view to a city, airport, port, incident, or tracked contact using a native photorealistic 3D map.
+Navigate from a full-Earth globe to a city, airport, port, incident, or tracked contact using a free, keyless OpenStreetMap-derived basemap.
 
 ### Fuse public data layers
 
@@ -69,13 +69,14 @@ The app is planned around:
 
 - **Kotlin** for application and domain code;
 - **Jetpack Compose** for phone and tablet UI;
-- **Google Maps 3D SDK for Android** for the photorealistic globe;
+- **MapLibre GL JS 6.6**, locally bundled and isolated behind a hardened Android WebView adapter, for true-globe rendering;
+- **OpenFreeMap Liberty**, used keylessly with visible OpenFreeMap, OpenMapTiles, and OpenStreetMap attribution;
 - **Coroutines and Flow** for live asynchronous state;
 - **Room and DataStore** for bounded app-owned data and preferences;
 - **Android Keystore-backed storage** for user-provided credentials;
 - an **optional self-hosted gateway** for capabilities that require protected server-side credentials, such as short-lived realtime voice tokens.
 
-The map SDK is isolated behind an internal adapter because it is experimental. Data layers remain provider-neutral and independently testable.
+The renderer is isolated behind provider-neutral Kotlin interfaces. Executable web assets are bundled in the APK, while the narrowly allowlisted map-style and tile requests go only to `tiles.openfreemap.org`. Data layers remain provider-neutral and independently testable.
 
 ## Product principles
 
@@ -88,7 +89,7 @@ The map SDK is isolated behind an internal adapter because it is experimental. D
 
 ## Networking and credentials
 
-Android Eye View is designed to work without a mandatory vendor account or hosted service.
+Android Eye View is designed to work without a mandatory vendor account, map credential, billing account, or hosted app service. The default globe is free and keyless; OpenFreeMap has no service-level guarantee, so the map boundary preserves a future self-hosting escape hatch.
 
 - Public HTTPS feeds should be accessed directly when provider policy and mobile reliability permit.
 - User-supplied app keys should be restricted at the provider and stored with Keystore-backed encryption.
@@ -114,7 +115,7 @@ Verify important information with authoritative sources.
 
 Android Eye View is the Android port of [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view). The upstream project established the mission, interaction model, source-honesty standard, and broad parity target this repository is adapting for native Android.
 
-Upstream code is MIT-licensed, but third-party datasets, map content, models, imagery, media, and live services retain their own terms. Reuse in this repository must preserve upstream notices and document each source independently. See the upstream [data-source documentation](https://github.com/bilawalsidhu/gods-eye-view/blob/main/DATA_SOURCES.md) and [security model](https://github.com/bilawalsidhu/gods-eye-view/blob/main/SECURITY.md).
+Upstream code is MIT-licensed, but third-party datasets, map content, models, imagery, media, and live services retain their own terms. M0 renderer notices are recorded in [Third-Party Notices](docs/THIRD_PARTY_NOTICES.md). Reuse in this repository must preserve upstream notices and document each source independently. See the upstream [data-source documentation](https://github.com/bilawalsidhu/gods-eye-view/blob/main/DATA_SOURCES.md) and [security model](https://github.com/bilawalsidhu/gods-eye-view/blob/main/SECURITY.md).
 
 Android Eye View is maintained by [Trebuchet Dynamics](https://github.com/TrebuchetDynamics). It does not claim endorsement by Google, Cesium, data providers, governments, militaries, or emergency services.
 
@@ -122,10 +123,10 @@ Android Eye View is maintained by [Trebuchet Dynamics](https://github.com/Trebuc
 
 The repository is at the specification stage. Early contributions are most useful as:
 
-- Maps 3D SDK feasibility findings;
-- Android performance and lifecycle experiments;
+- MapLibre/WebView globe feasibility findings;
+- Android performance, lifecycle, network-recovery, and renderer-process experiments;
 - provider licensing or mobile-access research;
 - security review of the direct-first/BYOK model;
 - focused proposals tied to a roadmap milestone.
 
-Before proposing a new data layer, read the contribution requirements in [PRD.md](PRD.md#21-open-source-contribution-requirements). Implementation conventions and build instructions will be added when the Android project scaffold lands.
+Before proposing a new data layer, read the contribution requirements in [PRD.md](PRD.md#21-open-source-contribution-requirements). Build and physical-device instructions are in the [M0 runbook](docs/m0/README.md). No production provider is accepted until M0 records a GO or bounded CONDITIONAL GO.

@@ -5,11 +5,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.trebuchetdynamics.androideyeview.presentation.SensorMode
 import com.trebuchetdynamics.androideyeview.ui.theme.AndroidEyeViewTheme
+import java.util.concurrent.atomic.AtomicBoolean
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -35,8 +38,10 @@ class M0FeasibilityScreenTest {
         }
 
         composeRule.onNodeWithTag("fake_map").assertIsDisplayed()
+        composeRule.onNodeWithText("FREE / KEYLESS").assertIsDisplayed()
         composeRule.onNodeWithText("Load 5,000 contacts").assertIsDisplayed()
         composeRule.onNodeWithText("5000 / 5000").assertIsDisplayed()
+        composeRule.onNodeWithText("Aircraft marker fallback — not a glTF model").assertIsDisplayed()
     }
 
     @Test
@@ -56,6 +61,7 @@ class M0FeasibilityScreenTest {
 
     @Test
     fun mapFailureRemainsReadable() {
+        val retried = AtomicBoolean(false)
         composeRule.setContent {
             AndroidEyeViewTheme {
                 M0FeasibilityScreen(
@@ -63,7 +69,7 @@ class M0FeasibilityScreenTest {
                         mapStatus = "UNAVAILABLE",
                         mapError = "Map initialization failed",
                     ),
-                    actions = noOpActions(),
+                    actions = noOpActions().copy(retryMap = { retried.set(true) }),
                     mapContent = {},
                 )
             }
@@ -71,9 +77,12 @@ class M0FeasibilityScreenTest {
 
         composeRule.onNodeWithText("UNAVAILABLE").assertIsDisplayed()
         composeRule.onNodeWithText("Map initialization failed").assertIsDisplayed()
+        composeRule.onNodeWithText("Retry globe").assertIsDisplayed().performClick()
+        composeRule.runOnIdle { assertTrue(retried.get()) }
     }
 
     private fun noOpActions() = M0Actions(
+        retryMap = {},
         loadContacts = {},
         tickOnce = {},
         startMotion = {},

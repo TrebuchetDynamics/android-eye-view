@@ -48,8 +48,8 @@ fun M0FeasibilityScreen(
                 .align(Alignment.TopEnd)
                 .safeDrawingPadding()
                 .padding(12.dp)
-                .widthIn(max = 380.dp)
-                .heightIn(max = 720.dp),
+                .widthIn(max = 340.dp)
+                .heightIn(max = 330.dp),
             shape = RoundedCornerShape(14.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp,
@@ -67,19 +67,37 @@ fun M0FeasibilityScreen(
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = "Native Maps 3D feasibility console",
+                    text = "Free MapLibre globe feasibility console",
                     style = MaterialTheme.typography.bodySmall,
                 )
+                Text(
+                    text = "FREE / KEYLESS",
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold,
+                )
+                StatusLine("RENDERER", "MapLibre globe")
                 StatusLine("MAP", state.mapStatus)
-                StatusLine("CONTACTS", "${state.renderedContactCount} / ${state.sourceContactCount}")
-                StatusLine("LABELS", state.labelCount.toString())
-                StatusLine("TICKS", state.tickCount.toString())
-                StatusLine("TRAIL", state.trailPointCount.toString())
-                state.loadDurationMillis?.let { StatusLine("LOAD", "%.2f ms".format(it)) }
-                state.lastTickDurationMillis?.let { StatusLine("LAST TICK", "%.2f ms".format(it)) }
                 state.mapError?.let {
                     Text(text = it, color = MaterialTheme.colorScheme.error)
+                    OutlinedButton(
+                        onClick = actions.retryMap,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Retry globe")
+                    }
                 }
+                StatusLine("CONTACTS", "${state.renderedContactCount} / ${state.sourceContactCount}")
+                StatusLine("LABEL BUDGET", state.labelCandidateCount.toString())
+                StatusLine("TICKS", state.tickCount.toString())
+                StatusLine("TRAIL", state.trailPointCount.toString())
+                state.loadDurationMillis?.let { StatusLine("KOTLIN LOAD", "%.2f ms".format(it)) }
+                state.lastTickDurationMillis?.let { StatusLine("KOTLIN TICK", "%.2f ms".format(it)) }
+                state.rendererContactsMillis?.let { StatusLine("RENDER", "%.2f ms".format(it)) }
+                state.rendererRafP95Millis?.let { StatusLine("RAF P95", "%.2f ms".format(it)) }
+                Text(
+                    text = "Aircraft marker fallback — not a glTF model",
+                    style = MaterialTheme.typography.labelSmall,
+                )
                 Text(text = state.message, style = MaterialTheme.typography.bodySmall)
 
                 Button(
@@ -155,6 +173,7 @@ private fun StatusLine(label: String, value: String) {
 }
 
 data class M0Actions(
+    val retryMap: () -> Unit,
     val loadContacts: () -> Unit,
     val tickOnce: () -> Unit,
     val startMotion: () -> Unit,

@@ -88,6 +88,45 @@ class M0FeasibilityViewModelTest {
     }
 
     @Test
+    fun replacingControllerReplaysContactsSelectionTrailAndFollow() = runTest(dispatcher.scheduler) {
+        val first = RecordingController()
+        val replacement = RecordingController()
+        val viewModel = M0FeasibilityViewModel(dispatcher = dispatcher, nanoTime = tickingClock())
+        viewModel.bindController(first)
+        viewModel.loadContacts()
+        advanceUntilIdle()
+        val initialPosition = first.lastEntities.first().position
+        viewModel.selectAircraft(first.lastEntities.first().id)
+        viewModel.startFollow()
+        viewModel.tickOnce()
+        advanceUntilIdle()
+        val tickedEntity = first.lastEntities.first()
+
+        viewModel.bindController(replacement)
+
+        assertThat(first.closeCount).isEqualTo(1)
+        assertThat(tickedEntity.position).isNotEqualTo(initialPosition)
+        assertThat(replacement.lastEntities).hasSize(5_000)
+        assertThat(replacement.lastEntities.first()).isEqualTo(tickedEntity)
+        assertThat(replacement.models).hasSize(1)
+        assertThat(replacement.polylines).hasSize(1)
+        assertThat(replacement.cameras).hasSize(1)
+    }
+
+    @Test
+    fun recordsOnlyKnownFiniteRendererMetrics() = runTest(dispatcher.scheduler) {
+        val viewModel = M0FeasibilityViewModel(dispatcher = dispatcher, nanoTime = tickingClock())
+
+        viewModel.recordRendererMetric("contacts-render-ms", 42.5)
+        viewModel.recordRendererMetric("raf-p95-ms", 18.2)
+        viewModel.recordRendererMetric("unknown", 99.0)
+        viewModel.recordRendererMetric("contacts-render-ms", Double.NaN)
+
+        assertThat(viewModel.state.value.rendererContactsMillis).isEqualTo(42.5)
+        assertThat(viewModel.state.value.rendererRafP95Millis).isEqualTo(18.2)
+    }
+
+    @Test
     fun closingViewModelStopsMotionAndClosesControllerOnce() = runTest(dispatcher.scheduler) {
         val controller = RecordingController()
         val viewModel = M0FeasibilityViewModel(dispatcher = dispatcher, nanoTime = tickingClock())

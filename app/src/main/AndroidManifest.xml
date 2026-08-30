@@ -7,10 +7,6 @@
         android:label="Android Eye View"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
-        <meta-data
-            android:name="com.google.android.geo.maps3d.API_KEY"
-            android:value="${MAPS3D_API_KEY}" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true">

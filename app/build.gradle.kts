@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.secrets.gradle.plugin)
 }
 
 android {
@@ -47,7 +46,7 @@ android {
 
 dependencies {
     implementation(project(":core-map"))
-    implementation(project(":maps3d-adapter"))
+    implementation(project(":web-map-adapter"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -68,12 +67,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-}
-
-secrets {
-    val secretsFile = rootProject.file("secrets.properties")
-    if (secretsFile.exists()) {
-        propertiesFileName = "secrets.properties"
-    }
-    defaultPropertiesFileName = "local.defaults.properties"
 }
