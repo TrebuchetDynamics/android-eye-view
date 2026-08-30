@@ -24,7 +24,7 @@ jobs:
           cache: npm
           cache-dependency-path: web-map/package-lock.json
       - uses: android-actions/setup-android@v3
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Validate and bundle free globe renderer
         run: |
           npm --prefix web-map ci
